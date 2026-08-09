@@ -1,10 +1,9 @@
 # job-calendar-skill
 
 job-calendar 是一个招聘岗位核查技能。当你想确认某家公司在特定城市是否有匹配的在招岗位（官网、招聘平台、聚合站全覆盖），它可以全网核查并生成一份**可累积、可搜索**的 HTML 报告。
+<img width="3639" height="1902" alt="image" src="https://github.com/user-attachments/assets/54f3b325-6c38-497e-9ec6-4ead74d929d2" />
 
-![image-20260810010722846](C:\Users\Administrator.DESKTOP-3LURCC5\AppData\Roaming\Typora\typora-user-images\image-20260810010722846.png)
-
-![image-20260810010812940](C:\Users\Administrator.DESKTOP-3LURCC5\AppData\Roaming\Typora\typora-user-images\image-20260810010812940.png)
+<img width="3689" height="1901" alt="image" src="https://github.com/user-attachments/assets/fef7d8ee-9468-496a-b9ef-ff6d5bd24666" />
 
 ### 做什么
 
