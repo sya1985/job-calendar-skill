@@ -2,6 +2,10 @@
 
 job-calendar 是一个招聘岗位核查技能。当你想确认某家公司在特定城市是否有匹配的在招岗位（官网、招聘平台、聚合站全覆盖），它可以全网核查并生成一份**可累积、可搜索**的 HTML 报告。
 
+![image-20260810010722846](C:\Users\Administrator.DESKTOP-3LURCC5\AppData\Roaming\Typora\typora-user-images\image-20260810010722846.png)
+
+![image-20260810010812940](C:\Users\Administrator.DESKTOP-3LURCC5\AppData\Roaming\Typora\typora-user-images\image-20260810010812940.png)
+
 ### 做什么
 
 输入「公司 + 岗位 + 工作地点」→ 自动全网核查官网 / BOSS直聘 / 智联 / 猎聘 / 51job / 拉勾 / 脉脉 / 牛客等渠道 → 生成一份累积式 HTML 核查报告（不输出 md）。
@@ -61,6 +65,8 @@ node scripts/job_calendar_server.js --data job_calendar_data.json --html job_cal
 - 对 `job_calendar_data.json` 中 `scheduled === true` 的全部企业，按各自**最后一次搜索条件**（最近一次 queryDate 的公司 / 岗位 / 地点 / 社招校招）重新核查一遍。
 - **一天内同条件只搜一次**：今日已搜过相同条件则跳过提示，不发起搜索。
 - **空清单保护**：没有任何企业勾选全量搜索时，仅返回提示、不发起任何搜索。
+
+> 全量搜索可以结合WorkBuddy里面的自动化任务，定期去执行
 
 ### 使用方式
 
