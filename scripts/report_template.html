@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>招聘信息核查报告</title>
+<style>
+:root{
+  --bg:#f5f6f8; --card:#ffffff; --ink:#1f2329; --muted:#8a9099;
+  --line:#e6e8eb; --accent:#2f6bff; --accent2:#eef3ff;
+  --ok:#0a8a3f; --warn:#c47f00; --weak:#9aa0a6;
+}
+*{box-sizing:border-box}
+body{margin:0;padding:0 100px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;display:flex;flex-direction:column;min-height:100vh}
+header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:14px 20px}
+h1{font-size:18px;margin:0 0 8px}
+.hint{font-size:12.5px;color:var(--muted);margin:0;line-height:1.6}
+.wrap{max-width:none;margin:0;padding:20px}
+.tabs{display:flex;flex-direction:column;gap:2px;width:200px;flex:0 0 auto;padding:14px 0 14px 12px;border-right:1px solid var(--line)}
+.tab{padding:10px 12px;font-size:14px;color:var(--muted);cursor:pointer;white-space:nowrap;border-left:3px solid transparent;border-radius:0 6px 6px 0;transition:all .15s;display:flex;align-items:center;gap:6px}
+.tab:hover{color:var(--accent);background:var(--accent2)}
+.tab.active{color:var(--accent);font-weight:600;border-left-color:var(--accent);background:var(--accent2)}
+.tab-del{margin-left:auto;border:none;background:transparent;color:#c0c4cc;cursor:pointer;font-size:15px;font-weight:700;line-height:1;width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:6px;transition:all .15s;flex:0 0 auto;opacity:0}
+.tab:hover .tab-del{opacity:1}
+.tab-del:hover{background:#ffe9e9;color:#e23}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#1f2329;color:#fff;font-size:13px;padding:10px 18px;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.2);z-index:200;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;max-width:80vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(-4px)}
+.layout{display:flex;align-items:flex-start;flex:1 0 auto}
+.sidebar{align-self:flex-start}
+.wrap{flex:1;min-width:0;padding:20px 0 20px 24px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.card h2{font-size:16px;margin:0 0 4px}
+.meta{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 4px}
+.badge{font-size:12px;padding:3px 9px;border-radius:999px;background:var(--accent2);color:var(--accent);border:1px solid #dbe6ff}
+.badge.loc{background:#fff3e0;color:var(--warn);border-color:#ffe0b0}
+.badge.date{background:#f0f1f3;color:var(--muted);border-color:var(--line)}
+.sec{margin-top:16px}
+.sec h3{font-size:14px;margin:0 0 8px;color:var(--ink);border-left:3px solid var(--accent);padding-left:8px}
+.pos{border:1px solid var(--line);border-radius:10px;padding:0;margin-bottom:12px;overflow:hidden;font-size:13px}
+.pos .t{font-weight:600;font-size:14px;padding:12px 16px 8px;background:#fafbfc;border-bottom:1px solid var(--line)}
+.ptbl{width:100%;border-collapse:collapse}
+.ptbl td{padding:7px 16px;border-bottom:1px solid #f3f4f5;vertical-align:top;line-height:1.65}
+.ptbl td:first-child{color:var(--muted);font-weight:500;width:72px;white-space:nowrap;background:#fcfdfe}
+.ptbl tr:last-child td{border-bottom:none}
+.ptbl a{color:var(--accent);text-decoration:none}
+.ptbl a:hover{text-decoration:underline}
+.pjd{padding:10px 16px 12px;color:#4a5057;white-space:pre-wrap;line-height:1.65;border-top:1px dashed #f0f1f3;font-size:13px}
+.pwarn{padding:8px 16px 12px;color:var(--warn);font-size:12.5px;background:#fffbeb}
+.fresh-unknown{font-weight:600}
+.tom{font-size:15px;margin:0 2px;vertical-align:-2px}
+.tom.rot{filter:grayscale(1)}
+.weak{opacity:.62;font-size:12.5px;border:1px dashed var(--line);border-radius:10px;padding:10px 14px;margin-top:8px}
+.weak summary{cursor:pointer;color:var(--weak);font-size:13px}
+.channels{display:flex;flex-wrap:wrap;gap:8px}
+.ch{font-size:13px;text-decoration:none;color:var(--accent);background:var(--accent2);border:1px solid #dbe6ff;border-radius:8px;padding:6px 10px}
+.sug{font-size:13px;color:#4a5057;padding-left:18px;margin:4px 0}
+.empty{color:var(--muted);text-align:center;padding:40px;line-height:1.9}
+.co-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+.co-name{font-size:20px;font-weight:700}
+.co-check{display:inline-flex;align-items:center;gap:7px;margin-left:auto;font-size:14px;font-weight:600;color:var(--accent);background:#dbe7ff;border:none;border-radius:999px;padding:8px 16px;cursor:pointer;user-select:none;transition:all .18s}
+.co-check:hover{background:#c9dcff}
+.co-check input{accent-color:var(--accent);width:16px;height:16px;cursor:pointer;margin:0}
+.co-check.on{color:#fff;background:var(--accent)}
+.co-check.on:hover{background:#1f56e0}
+.intro{font-size:13px;color:#4a5057;line-height:1.75;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin:10px 0 18px}
+.cal{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:18px}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.cal-nav button{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:8px;padding:5px 12px;cursor:pointer;font-size:13px}
+.cal-nav button:hover{border-color:var(--accent);color:var(--accent)}
+.cal-title{font-size:14px;font-weight:600}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal-dow{text-align:center;font-size:12px;color:var(--muted);padding:4px 0}
+.cal-day{position:relative;min-height:62px;border:1px solid var(--line);border-radius:10px;padding:6px 4px 4px;text-align:center;font-size:12px;color:var(--muted);background:#fafbfc}
+.cal-day.has{cursor:pointer;border-color:transparent;background:#cfe0ff;color:#1f4fd6}
+.cal-day.blank{border:none;background:transparent}
+.cal-day .dnum{font-weight:600;font-size:13px}
+.cal-day .ic{font-size:16px;line-height:1;margin-top:4px}
+.cal-day .fr{font-size:11px;margin-top:3px}
+.cal-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:10px}
+.cal-legend span{display:inline-flex;align-items:center;gap:5px}
+/* ---- Modal (date detail popup) ---- */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.35);backdrop-filter:blur(2px);align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto}
+.modal-overlay.show{display:flex}
+.modal-box{background:var(--card);border-radius:14px;box-shadow:0 12px 48px rgba(0,0,0,.18);width:100%;max-width:800px;max-height:85vh;overflow-y:auto;padding:24px 28px;position:relative}
+.modal-close{position:absolute;top:12px;right:14px;background:none;border:none;font-size:22px;color:var(--muted);cursor:pointer;line-height:1;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{background:#f0f1f3;color:var(--ink)}
+.modal-title{font-size:16px;font-weight:700;margin:0 0 4px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.modal-sub{font-size:13px;color:var(--muted);margin-bottom:18px}
+/* ---- Global data-limitation banner ---- */
+.disclaimer{font-size:12.5px;color:#7a5b00;background:#fff8e6;border-top:1px solid #ffe6a8;padding:10px 20px;line-height:1.75;margin:0;flex-shrink:0}
+.disclaimer b{color:#a35a00}
+/* ---- per-position verify tag ---- */
+.vtag{display:inline-block;font-size:11px;font-weight:600;color:#a35a00;background:#fff3d6;border:1px solid #ffd98a;border-radius:999px;padding:1px 8px;margin-left:8px;vertical-align:middle}
+</style>
+</head>
+<body>
+<header>
+  <h1>招聘信息核查报告</h1>
+  <p class="hint">勾选某家公司的「加入全量搜索」后，在对话中输入「全量搜索」即可按各公司最后一次搜索条件批量重新核查。</p>
+</header>
+<div class="layout">
+  <nav class="sidebar tabs" id="tabBar"></nav>
+  <div class="wrap" id="list"></div>
+</div>
+<div class="disclaimer"><b>数据局限性说明：</b>本报告岗位综合公开搜索（官网 / 招聘平台 / 聚合站）整理。其中 <b>BOSS 直聘职位页为动态渲染且反爬</b>，本工具无法直接抓取核验，仅能命中搜索引擎已收录的少量岗位，<b>存在漏检风险</b>。凡标注「⚠ 待 App 内确认」的岗位，均来自搜索摘要、未能逐项核验公司名与在招状态，请务必在 BOSS App 内公司主页二次确认后再投递。</div>
+<!-- Modal: date detail popup -->
+<div class="modal-overlay" id="dateModal">
+  <div class="modal-box">
+    <button class="modal-close" id="modalClose">&times;</button>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-sub" id="modalSub"></div>
+    <div id="modalBody"></div>
+  </div>
+</div>
+<script>
+const DATA = ___DATA___;
+const list = document.getElementById('list');
+const STRIP = /[（(][^)）]*[)）]/g;
+function stripName(s){ return (s||'未命名').replace(STRIP,'').trim(); }
+function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function posBlock(p){
+  let h='<div class="pos">';
+  let vtag = (p.verified===false)?' <span class="vtag">⚠ 待 App 内确认</span>':'';
+  h+='<div class="t">'+esc(p.title||'')+(p.type?' <span class="badge">'+esc(p.type)+'</span>':'')+vtag+'</div>';
+  h+='<table class="ptbl">';
+  const rows=[
+    ['地点',p.location],['薪资',p.salary],['经验',p.experience],
+    ['学历',p.education],['发布',p.publishDate],
+    ['来源',p.source?(p.url?'<a href="'+esc(p.url)+'" target="_blank">'+esc(p.source)+'</a>':esc(p.source)):'']
+  ];
+  rows.forEach(([k,v])=>{ if(v) h+='<tr><td>'+k+'</td><td>'+v+'</td></tr>'; });
+  h+='</table>';
+  let body='';
+  if(p.jd) body+='<div><b>岗位职责</b></div><div>'+esc(p.jd)+'</div>';
+  if(p.requirements) body+='<div style="margin-top:6px"><b>岗位要求</b></div><div>'+esc(p.requirements)+'</div>';
+  if(body) h+='<div class="pjd">'+body+'</div>';
+  let frTxt = p.freshness ? tomatoRow(p.freshness) : '';
+  let unknown = (!p.freshness && !p.publishDate);
+  if(p.warning || frTxt || unknown){
+    h+='<div class="pwarn">新鲜度提示：';
+    if(frTxt) h+=frTxt;
+    else if(unknown) h+='<span class="fresh-unknown">☁️ 未知（来源未标注发布日期）</span>';
+    if(p.warning) h+='（'+esc(p.warning)+'）';
+    h+='</div>';
+  }
+  h+='</div>';
+  return h;
+}
+function tomatoRow(fr){
+  if(!fr) return '';
+  let h='';
+  for(let i=0;i<(fr.fresh||0);i++) h+='<span class="tom">🍅</span>';
+  for(let i=0;i<(fr.rot||0);i++) h+='<span class="tom rot">🍅</span>';
+  return h;
+}
+function card(d){
+  let h='<div class="card">';
+  h+='<h2>'+esc(d.company||'')+' · '+esc(d.position||'')+' · '+esc(d.location||'')+'</h2>';
+  h+='<div class="meta"><span class="badge date">查询日期 '+esc(d.queryDate||'')+'</span>';
+  h+='<span class="badge loc">'+esc(d.location||'')+'</span>';
+  h+='<span class="badge">'+(d.recruitType||'社招')+'</span>';
+  h+='<span class="badge">岗位：'+esc(d.position||'')+'</span></div>';
+  h+='<div class="sec"><h3>本地确认岗位</h3>';
+  if(d.localPositions&&d.localPositions.length){ d.localPositions.forEach(p=>h+=posBlock(p)); }
+  else{ h+='<div class="sug">未检索到该地点明确在招的匹配岗位。</div>'; }
+  h+='</div>';
+  if(d.otherCityPositions&&d.otherCityPositions.length){
+    h+='<div class="sec"><h3>非关注地岗位（供参考）</h3><details class="weak"><summary>展开 '+d.otherCityPositions.length+' 条非关注地岗位</summary>';
+    d.otherCityPositions.forEach(p=>{ h+='<div style="margin-top:8px">• <b>'+esc(p.title||'')+'</b> — '+esc(p.location||'')+(p.source?'（'+esc(p.source)+'）':'')+(p.url?' <a href="'+esc(p.url)+'" target="_blank">链接</a>':'')+(p.note?'：'+esc(p.note):'')+'</div>'; });
+    h+='</details></div>';
+  }
+  const offCh=(d.channels||[]).filter(c=>c.official);
+  if(offCh.length){
+    h+='<div class="sec"><h3>官方招聘渠道</h3><div class="channels">';
+    offCh.forEach(c=>{ h+='<a class="ch" href="'+esc(c.url||'#')+'" target="_blank">'+esc(c.name||'')+'</a>'; });
+    h+='</div></div>';
+  }
+  if(d.suggestions&&d.suggestions.length){
+    h+='<div class="sec"><h3>给你的建议</h3>';
+    d.suggestions.forEach(s=>h+='<div class="sug">'+esc(s)+'</div>');
+    h+='</div>';
+  }
+  h+='</div>';
+  return h;
+}
+let activeTab = null;
+const selectedDate = {};   // company label -> selected date string
+const calState = {y:null, m:null};  // current calendar month
+
+// --- Build company list (label strips parens, full keeps them) ---
+const seen = {};
+const companies = [];
+DATA.forEach(d=>{
+  const full = d.company||'未命名';
+  const label = stripName(full);
+  if(!seen[label]){ seen[label]=true; companies.push({label, full, scheduled: !!d.scheduled}); }
+  else {
+    const c = companies.find(c=>c.label===label);
+    if(c && d.scheduled) c.scheduled = true;
+  }
+});
+const tabBar = document.getElementById('tabBar');
+function buildTabs(){
+  tabBar.innerHTML='';
+  companies.forEach((c)=>{
+    const el=document.createElement('div');
+    el.className='tab'+(c.label===activeTab?' active':'');
+    el.dataset.company=c.label;
+    const span=document.createElement('span');
+    span.textContent=c.label; span.style.flex='1'; span.style.overflow='hidden'; span.style.textOverflow='ellipsis';
+    const del=document.createElement('button');
+    del.className='tab-del'; del.textContent='×'; del.title='删除该公司及其所有搜索记录';
+    del.onclick=(ev)=>{ ev.stopPropagation(); deleteCompany(c.label); };
+    el.appendChild(span); el.appendChild(del);
+    el.addEventListener('click',()=>{
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      el.classList.add('active'); activeTab=c.label; renderList();
+    });
+    tabBar.appendChild(el);
+  });
+}
+if(companies.length) activeTab=companies[0].label;
+buildTabs();
+
+function entriesOf(label){ return DATA.filter(d=> stripName(d.company)===label); }
+function pad(n){ return (n<10?'0':'')+n; }
+function ymd(y,m,d){ return y+'-'+pad(m+1)+'-'+pad(d); }
+function parseYmd(s){ const p=(s||'').split('-'); return p.length===3?{y:+p[0],m:+p[1]-1,d:+p[2]}:null; }
+
+// representative freshness for a query entry (local first, then other-city)
+function entryFreshness(e){
+  const lp=(e.localPositions||[]).find(p=>p.freshness);
+  if(lp) return lp.freshness;
+  const op=(e.otherCityPositions||[]).find(p=>p.freshness);
+  return op?op.freshness:null;
+}
+
+function renderCalendar(label){
+  const entries = entriesOf(label);
+  if(calState.y===null){
+    const ds = entries.map(e=>parseYmd(e.queryDate)).filter(Boolean).sort((a,b)=>a.y-b.y||a.m-b.m);
+    const init = ds.length?ds[ds.length-1]:{y:new Date().getFullYear(),m:new Date().getMonth()};
+    calState.y=init.y; calState.m=init.m;
+  }
+  const y=calState.y, m=calState.m;
+  const first=new Date(y,m,1).getDay();
+  const days=new Date(y,m+1,0).getDate();
+  const byDate={};
+  entries.forEach(e=>{ if(e.queryDate){ (byDate[e.queryDate]=byDate[e.queryDate]||[]).push(e); } });
+  const dow=['日','一','二','三','四','五','六'];
+  let h='<div class="cal"><div class="cal-nav">';
+  h+='<button id="calPrev">‹ 上月</button>';
+  h+='<span class="cal-title">'+y+' 年 '+(m+1)+' 月 · '+esc(label)+' 搜索记录</span>';
+  h+='<button id="calNext">下月 ›</button></div>';
+  h+='<div class="cal-grid">';
+  dow.forEach(w=>h+='<div class="cal-dow">'+w+'</div>');
+  for(let i=0;i<first;i++) h+='<div class="cal-day blank"></div>';
+  for(let d=1;d<=days;d++){
+    const ds=ymd(y,m,d), arr=byDate[ds];
+    if(arr&&arr.length){
+      const found=arr.some(e=>(e.localPositions||[]).length>0);
+      h+='<div class="cal-day has" data-date="'+ds+'">';
+      h+='<div class="dnum">'+d+'</div>';
+      if(found){
+        const fr=entryFreshness(arr[0]);
+        if(!fr){
+          h+='<div class="ic">☁️</div>';
+        } else {
+          const hot = fr.fresh>=3;
+          h+='<div class="ic">'+(hot?'☀️':'⛅')+'</div>';
+        }
+      } else {
+        h+='<div class="ic">🌧️</div>';
+      }
+      h+='</div>';
+    } else {
+      h+='<div class="cal-day"><div class="dnum">'+d+'</div></div>';
+    }
+  }
+  h+='</div>';
+  h+='<div class="cal-legend"><span>☀️ 有本地岗位且发布日期≤30天</span><span>⛅ 有本地岗位且发布日期&gt;30天</span><span>☁️ 未标注发布日期/无法确认新鲜度</span><span>🌧️ 该日未搜到本地岗位</span><span>蓝底 有搜索记录</span></div>';
+  h+='</div>';
+  return h;
+}
+
+function renderList(){
+  if(!activeTab){ list.innerHTML='<div class="empty">请选择左侧企业查看详情。</div>'; return; }
+  const comp = companies.find(c=>c.label===activeTab);
+  const entries = entriesOf(activeTab);
+  // NO default date selection — calendar shows no selection until user clicks
+  if(selectedDate[activeTab]===undefined) selectedDate[activeTab]=null;
+  const meta = entries[0]||{};
+  let h='<div class="co-head">';
+  h+='<div class="co-name">'+esc(comp.full)+'</div>';
+  h+='<label class="co-check"><input type="checkbox" id="schedChk"> 加入全量搜索</label>';
+  h+='</div>';
+  if(meta.intro) h+='<div class="intro">'+esc(meta.intro)+'</div>';
+  h+=renderCalendar(activeTab);
+  // No inline results — clicking a date opens the modal instead
+  list.innerHTML=h;
+  // wire scheduled checkbox（状态持久化到服务端 JSON，不使用 localStorage）
+  const chk=document.getElementById('schedChk');
+  if(chk){
+    chk.checked = !!comp.scheduled;
+    const sync=()=>chk.closest('.co-check').classList.toggle('on', chk.checked);
+    sync();
+    chk.addEventListener('change',()=>{
+      const val=chk.checked;
+      sync();
+      // 静态网页（file:// 直接双击打开）无服务端，直接报错提示，不发起请求
+      if(location.protocol==='file:'){
+        chk.checked=!val; sync();
+        alert('无法保存：当前是静态网页（未连接 job-calendar 本地服务）。\n\n请先启动服务：\n  node scripts/job_calendar_server.js --data job_calendar_data.json --html job_calendar_report.html --port 8771\n\n再打开 http://127.0.0.1:8771/ 操作「加入全量搜索」。');
+        return;
+      }
+      fetch('/api/company/'+encodeURIComponent(activeTab)+'/scheduled', {
+        method:'PUT',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({value: val})
+      })
+      .then(r=>{ if(!r.ok) throw new Error('http '+r.status); return r.json(); })
+      .then(res=>{
+        // 同步内存中的 entries 与 companies，保持一致
+        DATA.forEach(d=>{ if(stripName(d.company)===activeTab) d.scheduled=!!res.scheduled; });
+        const c=companies.find(c=>c.label===activeTab); if(c) c.scheduled=!!res.scheduled;
+        flash('已'+(res.scheduled?'开启':'关闭')+'「'+comp.full+'」的全量搜索（已保存）。');
+      })
+      .catch(()=>{
+        // 服务不可达：还原勾选并提示
+        chk.checked=!val; sync();
+        alert('保存失败：未检测到 job-calendar 本地服务。\n\n请先启动服务：\n  node scripts/job_calendar_server.js --data job_calendar_data.json --html job_calendar_report.html --port 8771\n\n再打开 http://127.0.0.1:8771/ 操作。');
+      });
+    });
+  }
+  // wire calendar nav + day clicks → open modal
+  const prev=document.getElementById('calPrev'), next=document.getElementById('calNext');
+  if(prev) prev.onclick=()=>{ calState.m--; if(calState.m<0){calState.m=11;calState.y--;} renderList(); };
+  if(next) next.onclick=()=>{ calState.m++; if(calState.m>11){calState.m=0;calState.y++;} renderList(); };
+  document.querySelectorAll('.cal-day.has').forEach(cell=>{
+    cell.onclick=()=>openDateModal(activeTab, cell.dataset.date);
+  });
+}
+
+function openDateModal(tabName, dateStr){
+  const entries = entriesOf(tabName);
+  const sel = entries.filter(e=>e.queryDate===dateStr);
+  const overlay = document.getElementById('dateModal');
+  const titleEl = document.getElementById('modalTitle');
+  const subEl = document.getElementById('modalSub');
+  const bodyEl = document.getElementById('modalBody');
+  // Title: hidden (user removed)
+  const comp = companies.find(c=>c.label===tabName);
+  titleEl.textContent = '';
+  subEl.textContent = '';
+  // Body: cards for this date
+  bodyEl.innerHTML = sel.length ? sel.map(card).join('') : '<div class="empty">该日期无查询记录。</div>';
+  overlay.classList.add('show');
+}
+// Close modal
+document.getElementById('modalClose').onclick=()=>{
+  document.getElementById('dateModal').classList.remove('show');
+};
+document.getElementById('dateModal').onclick=function(e){
+  if(e.target===this) { this.classList.remove('show'); }
+};
+
+// ---- toast ----
+function flash(msg){
+  let t=document.getElementById('toast');
+  if(!t){ t=document.createElement('div'); t.id='toast'; t.className='toast'; document.body.appendChild(t); }
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._timer); t._timer=setTimeout(()=>t.classList.remove('show'),3600);
+}
+// export cleaned data as a downloadable JSON (browser-side persistence copy)
+function downloadJSON(){
+  const blob=new Blob([JSON.stringify(DATA,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='job_calendar_data.json';
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+// delete a company: call the local service so the deletion is persisted to
+// the data file. Falls back to a browser-side download only if the service
+// (which serves this page) is not reachable.
+function deleteCompany(label){
+  const comp=companies.find(c=>c.label===label);
+  const name=comp?comp.full:label;
+  if(!confirm('确定删除「'+name+'」及其全部搜索记录吗？\n此操作不可撤销。')) return;
+  fetch('/api/company/'+encodeURIComponent(label), {method:'DELETE'})
+    .then(r=>{ if(!r.ok) throw new Error('http '+r.status); return r.json(); })
+    .then(res=>{
+      // 服务可连通：真正删除并同步视图
+      for(let i=DATA.length-1;i>=0;i--){ if(stripName(DATA[i].company)===label) DATA.splice(i,1); }
+      const idx=companies.findIndex(c=>c.label===label);
+      if(idx>=0) companies.splice(idx,1);
+      if(activeTab===label) activeTab = companies.length?companies[0].label:null;
+      buildTabs(); renderList();
+      flash('已删除「'+name+'」并已同步保存（剩余 '+res.remaining+' 家公司）。');
+    })
+    .catch(()=>{
+      // 未连接本地服务：不删除、不下载，仅报错提示
+      alert('删除失败：未检测到 job-calendar 本地服务。\n\n请先在终端启动服务：\n  node scripts/job_calendar_server.js --data job_calendar_data.json --html job_calendar_report.html --port 8771\n\n然后重新打开 http://127.0.0.1:8771/ 再进行删除。');
+    });
+}
+
+renderList();
+
+</script>
+</body>
+</html>
