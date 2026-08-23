@@ -118,6 +118,20 @@ const list = document.getElementById('list');
 const STRIP = /[（(][^)）]*[)）]/g;
 function stripName(s){ return (s||'未命名').replace(STRIP,'').trim(); }
 function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+// 展示与否完全由该条目自身的查询条件（recruitType）决定：
+//  - 已截止：无在招岗位，不展示
+//  - 社招查询：只展示社招岗（隐藏校招/实习/应届）
+//  - 校招查询：只展示校招/实习/应届岗（隐藏社招）
+function isCampusIntern(p){ return p && /校招|实习|应届/.test((p.type||'')+' '+(p.title||'')); }
+function shouldShowPos(p, recruitType){
+  if(!p) return false;
+  if(p.status === '已截止') return false;            // 已截止：无在招岗位，不展示
+  const rt = recruitType || '社招';
+  const campus = isCampusIntern(p);
+  if(rt === '社招') return !campus;   // 社招查询：仅显示社招岗
+  if(rt === '校招') return campus;    // 校招查询：仅显示校招/实习/应届岗
+  return true;                        // 其它查询类型：全部展示
+}
 function posBlock(p){
   let h='<div class="pos">';
   let vtag = (p.verified===false)?' <span class="vtag">⚠ 待 App 内确认</span>':'';
@@ -161,12 +175,14 @@ function card(d){
   h+='<span class="badge">'+(d.recruitType||'社招')+'</span>';
   h+='<span class="badge">岗位：'+esc(d.position||'')+'</span></div>';
   h+='<div class="sec"><h3>本地确认岗位</h3>';
-  if(d.localPositions&&d.localPositions.length){ d.localPositions.forEach(p=>h+=posBlock(p)); }
-  else{ h+='<div class="sug">未检索到该地点明确在招的匹配岗位。</div>'; }
+  const _lp=(d.localPositions||[]).filter(p=>shouldShowPos(p,d.recruitType));
+  if(_lp.length){ _lp.forEach(p=>h+=posBlock(p)); }
+  else{ h+='<div class="sug">未检索到该地点明确在招的匹配岗位（已按查询类型「'+(d.recruitType||'社招')+'」过滤、并排除已截止岗位）。</div>'; }
   h+='</div>';
-  if(d.otherCityPositions&&d.otherCityPositions.length){
-    h+='<div class="sec"><h3>非关注地岗位（供参考）</h3><details class="weak"><summary>展开 '+d.otherCityPositions.length+' 条非关注地岗位</summary>';
-    d.otherCityPositions.forEach(p=>{ h+='<div style="margin-top:8px">• <b>'+esc(p.title||'')+'</b> — '+esc(p.location||'')+(p.source?'（'+esc(p.source)+'）':'')+(p.url?' <a href="'+esc(p.url)+'" target="_blank">链接</a>':'')+(p.note?'：'+esc(p.note):'')+'</div>'; });
+  const _oc=(d.otherCityPositions||[]).filter(p=>shouldShowPos(p,d.recruitType));
+  if(_oc.length){
+    h+='<div class="sec"><h3>非关注地岗位（供参考）</h3><details class="weak"><summary>展开 '+_oc.length+' 条非关注地岗位</summary>';
+    _oc.forEach(p=>{ h+='<div style="margin-top:8px">• <b>'+esc(p.title||'')+'</b> — '+esc(p.location||'')+(p.source?'（'+esc(p.source)+'）':'')+(p.url?' <a href="'+esc(p.url)+'" target="_blank">链接</a>':'')+(p.note?'：'+esc(p.note):'')+'</div>'; });
     h+='</details></div>';
   }
   const offCh=(d.channels||[]).filter(c=>c.official);
@@ -258,7 +274,7 @@ function renderCalendar(label){
   for(let d=1;d<=days;d++){
     const ds=ymd(y,m,d), arr=byDate[ds];
     if(arr&&arr.length){
-      const found=arr.some(e=>(e.localPositions||[]).length>0);
+      const found=arr.some(e=>((e.localPositions||[]).filter(p=>shouldShowPos(p,e.recruitType))).length>0);
       h+='<div class="cal-day has" data-date="'+ds+'">';
       h+='<div class="dnum">'+d+'</div>';
       if(found){
