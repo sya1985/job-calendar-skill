@@ -1,0 +1,22 @@
+# Python 字节码与缓存
+__pycache__/
+*.py[cod]
+*.pyc
+
+# Python 虚拟环境
+.venv/
+venv/
+*.egg-info/
+
+# Node 依赖
+node_modules/
+npm-debug.log*
+
+# 单次查询产生的临时 entry 文件（合并进 data 后即可丢弃）
+entry_tmp_*.json
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
